@@ -12,7 +12,12 @@ from pyogrio.util import (
 
 with GDALEnv():
     from pyogrio._err import _register_error_handler
-    from pyogrio._io import ogr_list_layers, ogr_read_bounds, ogr_read_info
+    from pyogrio._io import (
+        ogr_list_layers,
+        ogr_read_bounds,
+        ogr_read_info,
+        set_threadlocal_config_option as _set_threadlocal_config_option,
+    )
     from pyogrio._ogr import (
         _get_drivers_for_path,
         _register_drivers,
@@ -310,6 +315,35 @@ def set_gdal_config_options(options):
 
     """
     _set_gdal_config_options(options)
+
+
+def set_gdal_threadlocal_config_option(key: str, value: str | bool | None):
+    """Set GDAL configuration options.
+
+    Options are listed here: https://trac.osgeo.org/gdal/wiki/ConfigOptions
+
+    No error is raised if invalid option names are provided.
+
+    These options are applied to the local thread only
+
+    Parameters
+    ----------
+    key : str
+        Key to be set
+    value : str | bool | None
+        Value to be set.  ``True`` / ``False`` are normalized to ``'ON'``
+        / ``'OFF'``. A value of ``None`` for a config option can be used to clear out a
+        previously set value.
+
+    Returns
+    -------
+    previous value of the option or None if not set in order to allow clearing.
+        ``'ON'`` / ``'OFF'`` are normalized to ``True`` / ``False``.
+
+    """
+    if isinstance(value, bool):
+        value = "ON" if value else "OFF"
+    _set_threadlocal_config_option(key, value)
 
 
 def get_gdal_config_option(name):

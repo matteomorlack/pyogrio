@@ -212,6 +212,29 @@ cdef const char* override_threadlocal_config_option(str key, str value):
     return prev_value
 
 
+def set_threadlocal_config_option(str key, str value):
+    """Set the CPLSetThreadLocalConfigOption for key=value
+
+    Parameters
+    ----------
+    key : str
+    value : str
+
+    Returns
+    -------
+    const char*
+        value previously set for key, so that it can be later restored in python form,
+        is freed.
+    """
+
+    cdef const char* prev = override_threadlocal_config_option(key, value)
+    if prev == NULL:
+        return None
+    py_prev = get_string(prev)
+    CPLFree(<void*>prev)
+    return py_prev
+
+
 cdef void* ogr_open(const char* path_c, int mode, char** options) except NULL:
     """Open an existing OGR data source
 
